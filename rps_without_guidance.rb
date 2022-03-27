@@ -14,7 +14,7 @@
 class RPSEngine
   attr_reader :players
   attr_accessor :scoreboard
-
+  
   YESNO = %w(y n)
 
   def initialize
@@ -29,12 +29,20 @@ class RPSEngine
     @scoreboard = []
     players[0], players[1] = Player.new(name), Player.new
   end
-
+  
   def welcome
     system 'clear'
     puts 'Welcome to Rock Paper Scissors!'
     puts 'Please enter your name:
     '
+  end
+  
+  def game_loop
+    players[0].player_choice
+    players[1].computer_choice
+    determine_winner(players[0].moves[-1], players[1].moves[-1])
+    display_winner
+    play_again?
   end
 
   def display_winner
@@ -84,14 +92,6 @@ class RPSEngine
     Goodbye!'
   end
 
-  def game_loop
-    players[0].player_choice
-    players[1].computer_choice
-    determine_winner(players[0].moves[-1], players[1].moves[-1])
-    display_winner
-    play_again?
-  end
-
   def determine_winner(player, computer)
     case player
     when "Rock"
@@ -101,6 +101,7 @@ class RPSEngine
     when "Scissors"
       result = scissors(computer)
     end
+
     if result == 'win'
       scoreboard << self.players[0].name
     elsif result == 'lose'
@@ -156,32 +157,24 @@ class Player
   end
 
   def player_choice
-    system 'clear'
+
     puts '
-    Choose one:'
+      Choose one:'
     puts MOVE
     puts ''
     round_choice = gets.chomp
-  
-    loop do 
-      round_choice = MOVE.select do |element| 
-        round_choice.capitalize == element ||
-        round_choice[0].upcase == element[0]
-      end
-      if round_choice[0] == nil
-        puts "
-          Please enter a valid choice:"
-        puts MOVE
-        puts ''
-        round_choice = gets.chomp
-        next
-      else
-        round_choice = round_choice[0]
-        break
-      end
-    end
+    round_choice = choice_selector(round_choice)
+          
+    round_choice == nil ? player_choice : moves << round_choice
+  end
 
-    moves << round_choice
+  def choice_selector(choice)
+    return nil if choice == nil
+    result = MOVE.select do |element| 
+      choice.casecmp(element) == 0 ||
+      choice[0].upcase == element[0]
+    end
+    result.empty? ? nil : result[0]
   end
 end
 
