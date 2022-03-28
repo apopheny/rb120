@@ -62,6 +62,58 @@ class RPSEngine
     #{players[1].name} has won #{count_wins(players[1].name)} games"
   end
 
+  def determine_winner(player, computer)
+    case player
+    when "Rock"
+      result = rock(computer)
+    when "Paper"
+      result = paper(computer)
+    when "Scissors"
+      result = scissors(computer)
+    end
+
+    if result == 'win'
+      scoreboard << self.players[0].name
+    elsif result == 'lose'
+      scoreboard << self.players[1].name
+    else
+      scoreboard << 'tie'
+    end
+  end
+
+  def rock(opponent_move)
+    case opponent_move
+    when 'Rock'
+      'tie'
+    when 'Paper'
+      'lose'
+    else
+      'win'
+    end
+  end
+
+  def paper(opponent_move)
+    case opponent_move
+    when 'Paper'
+      'tie'
+    when 'Scissors'
+      'lose'
+    else
+      'win'
+    end
+  end
+
+  def scissors(opponent_move)
+    case opponent_move
+    when 'Scissors'
+      'tie'
+    when 'Rock'
+      'lose'
+    else
+      'win'
+    end
+  end
+  
   def count_wins(player)
     scoreboard.count(player)
   end
@@ -92,54 +144,7 @@ class RPSEngine
     Goodbye!'
   end
 
-  def determine_winner(player, computer)
-    case player
-    when "Rock"
-      result = rock(computer)
-    when "Paper"
-      result = paper(computer)
-    when "Scissors"
-      result = scissors(computer)
-    end
 
-    if result == 'win'
-      scoreboard << self.players[0].name
-    elsif result == 'lose'
-      scoreboard << self.players[1].name
-    else
-      scoreboard << 'tie'
-    end
-  end
-
-  def rock(opponent_move)
-    if opponent_move == 'Rock'
-      'tie'
-    elsif opponent_move == 'Paper'
-      'lose'
-    else
-      'win'
-    end
-  end
-
-  def paper(opponent_move)
-    if opponent_move == 'Paper'
-      'tie'
-    elsif opponent_move == 'Scissors'
-      'lose'
-    else
-      'win'
-    end
-  end
-
-  def scissors(opponent_move)
-    if opponent_move == 'Scissors'
-      'tie'
-    elsif opponent_move == 'Rock'
-      'lose'
-    else
-      'win'
-    end
-  end
 end
 
 class Player
