@@ -29,20 +29,45 @@ require 'pry'
 
 class Game
   def initialize
+    display_welcome_message
+    @dealer = Player.new(:dealer)
+    @human = Player.new(:human)
     game_engine
   end
   
   def game_engine
-    display_welcome_message
     @deck = Deck.new
-    @human = Player.new(:human)
-    @dealer = Player.new(:dealer)
+    wager
     deal_hands
     player_hit?
     dealer_hit
     showdown
     determine_winner
+    show_balances
+    play_again?
     display_goodbye_message
+  end
+
+  def play_again?
+    if @dealer.bankroll.balance <= 0
+      puts ''
+      puts "You done cleaned us out!"
+      display_goodbye_message
+      exit
+    end
+    puts "Would you like to play again? (Y/N)"
+    response = nil
+    loop do
+      response = gets.chomp[0].capitalize
+      break if %w(Y N).include?(response)
+      puts "Invalid response. Would you like to play again?"
+      puts "Please enter Y or N:"
+    end
+    game_engine if response == "Y" && broke == false
+  end
+
+  def broke
+    @human.bankroll.balance <= 0
   end
 
   def deal_hands
@@ -53,7 +78,31 @@ class Game
     system 'clear'
   end
 
+  def wager
+    @bet = wager_amount
+  end
+
+  def show_balances
+    puts ''
+    puts "You have #{@human.bankroll.balance}"
+    puts "Dealer has #{@dealer.bankroll.balance}"
+  end
+
+  def wager_amount
+    show_balances
+    wager = nil
+    loop do
+      puts "Please enter your wager amount:"
+      wager = gets.chomp.to_i
+      break if wager > 0 && wager <= @human.bankroll.balance
+      puts "Please enter a number between 1 & #{@human.bankroll.balance}"
+    end
+    wager
+  end
+
   def display_game_state
+    clear
+    puts ''
     puts "Your hand is:"
     puts @human
     puts "Your hand score is:"
@@ -78,6 +127,9 @@ class Game
   end
 
   def showdown
+    puts ''
+    puts "SHOWDOWN!"
+    puts ''
     puts "#{@human.name} has: #{@human}."
     puts "Score: #{@human.hand_total}"
     puts ''
@@ -86,14 +138,27 @@ class Game
     puts ''
   end
 
+  def change_money(winner)
+    if winner == :dealer
+      @human.bankroll.change_balance(-@bet)
+      @dealer.bankroll.change_balance(@bet)
+    else
+      @human.bankroll.change_balance(@bet)
+      @dealer.bankroll.change_balance(-@bet)
+    end
+  end
+
   def determine_winner
     if @human.bust?
-      declare_winner(@dealer.name)
+      declare_winner(@dealer.name); change_money(:dealer)
     elsif @dealer.bust?
-      declare_winner(@human.name)
+      declare_winner(@human.name); change_money(:human)
     elsif @dealer.hand_total != @human.hand_total
-      @dealer.hand_total > @human.hand_total ? declare_winner(@dealer.name) : 
-      declare_winner(@human.name)
+      if @dealer.hand_total > @human.hand_total
+        declare_winner(@dealer.name); change_money(:dealer)
+      else
+        declare_winner(@human.name); change_money(:human)
+      end
     else
       puts "It's a tie!"
     end
@@ -117,20 +182,24 @@ class Game
   end
 
   def display_welcome_message
+    clear
     puts "Welcome to 21!"
   end
 
   def display_goodbye_message
+    puts ''
+    puts "Get out of here, you broke bum!" if broke
     puts "Thanks for playing 21!"
-    puts "Goodbye"
+    puts "Goodbye!"
   end
 end
 
 class Player
   attr_accessor :hand
-  attr_reader :name
+  attr_reader :name, :bankroll
   
   def initialize(type)
+    @bankroll = Bankroll.new
     @name = "Dealer"
     loop do
       break if type == :dealer
@@ -206,8 +275,14 @@ class Deck
 end
 
 class Bankroll
+  attr_reader :balance
+
   def initialize
-    @total = 1500
+    @balance = 1500
+  end
+
+  def change_balance(amount)
+    @balance += amount
   end
 end
 
